@@ -57,12 +57,12 @@ async def get_first_item(
     item_name = recommendation["item_name"]
     brand = recommendation.get("brand", "")
     price = recommendation["price"]
-    search_url = f"https://www.musinsa.com/search/goods?keyword={item_name.replace(' ', '+')}"
     combinations = [CombinationOut(**c) for c in recommendation.get("combinations", [])]
 
     musinsa = await search_first_product(item_name)
     image_url = musinsa["image_url"] if musinsa else None
-    product_url = musinsa["product_url"] if musinsa else None
+    fallback_url = f"https://www.musinsa.com/search/goods?keyword={item_name.replace(' ', '+')}"
+    product_url = (musinsa["product_url"] if musinsa else None) or fallback_url
     if musinsa:
         price = musinsa["price"] or price
         brand = musinsa["brand"] or brand
@@ -81,7 +81,7 @@ async def get_first_item(
             category="top",
             tags=[profile.style_mood],
             image_url=image_url,
-            product_url=product_url or search_url,
+            product_url=product_url,
         )
         db.add(item)
         await db.flush()
@@ -102,7 +102,6 @@ async def get_first_item(
         reason=recommendation["reason"],
         image_url=image_url,
         product_url=product_url,
-        search_url=search_url,
         combinations=combinations,
         current_combination_count=current_combination_count,
         after_combination_count=after_combination_count,
