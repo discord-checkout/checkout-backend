@@ -98,13 +98,13 @@ POST /onboarding/diagnose
     "style_mood": "minimal" | "casual" | "cityboy" | "amekaji" | "sports" | "vintage",
     "fit_preference": "slim" | "regular" | "overfit" | "unknown",
     "lifestyle": "campus" | "office" | "daily" | "freelance",
-    "budget_range": "under_5" | "5_to_10" | "10_to_20" | "over_20",
     "current_wardrobe": {
       "top": ["white_black_tee", "hoodie", "knit", ...],   # 없으면 빈 배열
       "bottom": ["black_slacks", "wide_denim", ...],
       "outer": ["coach_jacket", "windbreaker", ...],
       "shoes": ["white_sneakers", "new_balance", ...]
-    }
+    },
+    "budget_range": "under_5" | "5_to_10" | "10_to_20" | "over_20"
   }
   Returns: {
     "profile_id": "uuid",

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.dependencies import get_current_user
@@ -31,6 +34,22 @@ async def get_first_item(
             detail="스타일 진단을 먼저 완료해주세요.",
         )
 
+    existing_result = await db.execute(
+        select(WardrobeItem)
+        .where(WardrobeItem.user_id == current_user.id, WardrobeItem.is_first_item == True)  # noqa: E712
+        .options(selectinload(WardrobeItem.item))
+    )
+    existing_entry = existing_result.scalar_one_or_none()
+    if existing_entry:
+        item = existing_entry.item
+        recommendation = await ai.recommend_first_item(profile)
+        return FirstItemRecommendationOut(
+            item=ItemOut.model_validate(item),
+            reason=recommendation["reason"],
+            combinations=[CombinationOut(**c) for c in recommendation.get("combinations", [])],
+            combination_count=recommendation.get("combination_count", 3),
+        )
+
     recommendation = await ai.recommend_first_item(profile)
 
     item = Item(
@@ -50,26 +69,15 @@ async def get_first_item(
         item_id=item.id,
         month_added=1,
         is_first_item=True,
-        combination_count=recommendation.get("combination_count", 3),
+        combination_count=0,
     )
     db.add(wardrobe_entry)
     await db.commit()
     await db.refresh(item)
 
-    item_out = ItemOut(
-        id=item.id,
-        name=item.name,
-        brand=item.brand,
-        price=item.price,
-        image_url=item.image_url,
-        product_url=item.product_url,
-        tags=item.tags,
-    )
-    combinations = [CombinationOut(**c) for c in recommendation.get("combinations", [])]
-
     return FirstItemRecommendationOut(
-        item=item_out,
+        item=ItemOut.model_validate(item),
         reason=recommendation["reason"],
-        combinations=combinations,
-        combination_count=recommendation.get("combination_count", len(combinations)),
+        combinations=[CombinationOut(**c) for c in recommendation.get("combinations", [])],
+        combination_count=recommendation.get("combination_count", 3),
     )

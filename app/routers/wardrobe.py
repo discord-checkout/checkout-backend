@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +23,18 @@ from app.schemas.wardrobe import (
     WardrobeOut,
 )
 from app.services import ai
+from app.services.combination import calculate_combinations
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
+
+
+async def _get_wardrobe_entries(user_id: uuid.UUID, db: AsyncSession) -> list[WardrobeItem]:
+    result = await db.execute(
+        select(WardrobeItem)
+        .where(WardrobeItem.user_id == user_id)
+        .options(selectinload(WardrobeItem.item))
+    )
+    return list(result.scalars().all())
 
 
 @router.get("", response_model=WardrobeOut)
@@ -28,12 +42,7 @@ async def get_wardrobe(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> WardrobeOut:
-    result = await db.execute(
-        select(WardrobeItem)
-        .where(WardrobeItem.user_id == current_user.id)
-        .options(selectinload(WardrobeItem.item))
-    )
-    entries = result.scalars().all()
+    entries = await _get_wardrobe_entries(current_user.id, db)
 
     items_out = [
         WardrobeItemOut(
@@ -45,7 +54,7 @@ async def get_wardrobe(
         )
         for e in entries
     ]
-    total = sum(e.combination_count for e in entries)
+    total = calculate_combinations([e.item for e in entries])
     return WardrobeOut(items=items_out, total_combination_count=total)
 
 
@@ -60,37 +69,33 @@ async def add_to_wardrobe(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="상품을 찾을 수 없습니다.")
 
-    existing_result = await db.execute(
-        select(WardrobeItem)
-        .where(WardrobeItem.user_id == current_user.id)
-        .options(selectinload(WardrobeItem.item))
-    )
-    existing_entries = existing_result.scalars().all()
-    prev_total = sum(e.combination_count for e in existing_entries)
+    existing_entries = await _get_wardrobe_entries(current_user.id, db)
+    prev_total = calculate_combinations([e.item for e in existing_entries])
 
-    new_count = max(1, len(existing_entries)) * 3
+    new_total = calculate_combinations([e.item for e in existing_entries] + [item])
+    delta = new_total - prev_total
+
     entry = WardrobeItem(
         user_id=current_user.id,
         item_id=item.id,
         month_added=len(existing_entries) + 1,
         is_first_item=False,
-        combination_count=new_count,
+        combination_count=delta,
     )
     db.add(entry)
     await db.commit()
     await db.refresh(entry)
 
-    new_total = prev_total + new_count
     return WardrobeAddOut(
         added_item=WardrobeItemOut(
             id=entry.id,
             item=ItemOut.model_validate(item),
             month_added=entry.month_added,
             is_first_item=entry.is_first_item,
-            combination_count=entry.combination_count,
+            combination_count=delta,
         ),
         new_combination_count=new_total,
-        delta=new_count,
+        delta=delta,
     )
 
 
@@ -108,33 +113,39 @@ async def get_roadmap(
             status_code=status.HTTP_404_NOT_FOUND, detail="스타일 진단을 먼저 완료해주세요."
         )
 
-    wardrobe_result = await db.execute(
-        select(WardrobeItem)
-        .where(WardrobeItem.user_id == current_user.id)
-        .options(selectinload(WardrobeItem.item))
-    )
-    current_items = [{"name": e.item.name} for e in wardrobe_result.scalars().all()]
+    existing_entries = await _get_wardrobe_entries(current_user.id, db)
+    current_items = [{"name": e.item.name, "category": e.item.category} for e in existing_entries]
 
     months_data = await ai.generate_roadmap(profile, current_items)
 
     months_out: list[RoadmapMonthOut] = []
     for m in months_data:
-        placeholder_item = ItemOut(
-            id=__import__("uuid").uuid4(),
-            name=m["item_name"],
-            brand=m.get("brand"),
-            price=m.get("price", 0),
-            image_url=None,
-            product_url=None,
-            tags=[],
+        item_result = await db.execute(
+            select(Item).where(Item.name == m["item_name"], Item.brand == m.get("brand"))
         )
+        item = item_result.scalar_one_or_none()
+
+        if not item:
+            item = Item(
+                id=uuid.uuid4(),
+                name=m["item_name"],
+                brand=m.get("brand"),
+                price=m.get("price", 0),
+                category=m.get("category", "top"),
+                tags=profile.style_tags,
+                product_url=f"https://www.musinsa.com/search/goods?keyword={m['item_name'].replace(' ', '+')}",
+            )
+            db.add(item)
+            await db.flush()
+
         months_out.append(
             RoadmapMonthOut(
                 month=m["month"],
-                recommended_item=placeholder_item,
+                recommended_item=ItemOut.model_validate(item),
                 reason=m["reason"],
                 projected_combination_count=m["projected_combination_count"],
             )
         )
 
+    await db.commit()
     return RoadmapOut(months=months_out)
