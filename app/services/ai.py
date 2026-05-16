@@ -64,13 +64,16 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
     }
 
     prompt = f"""
-당신은 패션 큐레이터입니다. 아래 프로필을 가진 대학생에게 옷장의 첫 번째 아이템을 추천해주세요.
+당신은 패션 큐레이터입니다. 아래 프로필의 대학생에게 옷장의 핵심 첫 번째 아이템을 추천해주세요.
 
 스타일: {profile.style_mood}
 핏 선호: {profile.fit_preference}
 라이프스타일: {profile.lifestyle}
 예산: {budget_label}
-현재 옷장: {wardrobe_summary}
+현재 보유 옷장: {wardrobe_summary}
+
+조합(combinations)은 반드시 현재 보유 옷장의 아이템들과 추천 아이템을 엮어서 만들 수 있는 실제 코디여야 합니다.
+보유 옷장이 비어있으면 앞으로 갖춰나갈 기본 아이템들과의 조합을 제시하세요.
 
 다음 JSON 형식으로만 응답하세요:
 {{

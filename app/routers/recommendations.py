@@ -16,6 +16,7 @@ from app.models.wardrobe import WardrobeItem
 from app.schemas.item import CombinationOut, FirstItemRecommendationOut
 from app.services import ai
 from app.services.combination import calculate_combinations, calculate_wardrobe_combinations
+from app.services.musinsa import search_first_product
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -59,6 +60,13 @@ async def get_first_item(
     search_url = f"https://www.musinsa.com/search/goods?keyword={item_name.replace(' ', '+')}"
     combinations = [CombinationOut(**c) for c in recommendation.get("combinations", [])]
 
+    musinsa = await search_first_product(item_name)
+    image_url = musinsa["image_url"] if musinsa else None
+    product_url = musinsa["product_url"] if musinsa else None
+    if musinsa:
+        price = musinsa["price"] or price
+        brand = musinsa["brand"] or brand
+
     if existing_entry:
         wardrobe_entries_result = await db.execute(
             select(WardrobeItem)
@@ -75,7 +83,8 @@ async def get_first_item(
             price=price,
             category="top",
             tags=[profile.style_mood],
-            product_url=search_url,
+            image_url=image_url,
+            product_url=product_url or search_url,
         )
         db.add(item)
         await db.flush()
@@ -103,6 +112,8 @@ async def get_first_item(
         price=price,
         brand=brand,
         reason=recommendation["reason"],
+        image_url=image_url,
+        product_url=product_url,
         search_url=search_url,
         combinations=combinations,
         current_combination_count=current_combination_count,
