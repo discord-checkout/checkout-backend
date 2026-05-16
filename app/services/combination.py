@@ -18,7 +18,7 @@ def calculate_combinations(items: list[Item]) -> int:
     if tops == 0 or bottoms == 0:
         return 0
 
-    return tops * bottoms * max(1, shoes) * (outers + 1)
+    return tops * bottoms + shoes + outers
 
 
 def calculate_wardrobe_combinations(wardrobe: dict) -> int:
@@ -30,4 +30,4 @@ def calculate_wardrobe_combinations(wardrobe: dict) -> int:
     if tops == 0 or bottoms == 0:
         return 0
 
-    return tops * bottoms * max(1, shoes) * (outers + 1)
+    return tops * bottoms + shoes + outers

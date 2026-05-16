@@ -74,6 +74,7 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
 
 조합(combinations)은 반드시 현재 보유 옷장의 아이템들과 추천 아이템을 엮어서 만들 수 있는 실제 코디여야 합니다.
 보유 옷장이 비어있으면 앞으로 갖춰나갈 기본 아이템들과의 조합을 제시하세요.
+모든 텍스트는 반드시 한국어로만 작성하세요. 영어 단어(cargo pants, white shirt 등)는 절대 사용하지 마세요.
 
 다음 JSON 형식으로만 응답하세요:
 {{

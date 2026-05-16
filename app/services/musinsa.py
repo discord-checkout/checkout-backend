@@ -19,8 +19,16 @@ _HEADERS = {
 }
 
 
+def _simplify_keyword(keyword: str) -> str:
+    import re
+    keyword = re.sub(r"\([^)]*\)", "", keyword)  # 괄호 제거
+    keyword = re.sub(r"\s*[-–]\s*\S+.*$", "", keyword)  # 대시 이후 제거
+    return keyword.strip()
+
+
 async def search_first_product(keyword: str) -> dict | None:
-    params = {"keyword": keyword, "caller": "SEARCH", "page": 1, "size": 1}
+    clean = _simplify_keyword(keyword)
+    params = {"keyword": clean, "caller": "SEARCH", "page": 1, "size": 1}
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             res = await client.get(_URL, params=params, headers=_HEADERS)
