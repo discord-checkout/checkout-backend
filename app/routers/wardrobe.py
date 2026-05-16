@@ -24,6 +24,7 @@ from app.schemas.wardrobe import (
 )
 from app.services import ai
 from app.services.combination import calculate_combinations
+from app.services.musinsa import search_first_product
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
 
@@ -142,14 +143,17 @@ async def get_roadmap(
         item = item_result.scalar_one_or_none()
 
         if not item:
+            musinsa = await search_first_product(m["item_name"])
+            fallback_url = f"https://www.musinsa.com/search/goods?keyword={m['item_name'].replace(' ', '+')}"
             item = Item(
                 id=uuid.uuid4(),
                 name=m["item_name"],
-                brand=m.get("brand"),
-                price=m.get("price", 0),
+                brand=musinsa["brand"] if musinsa else m.get("brand"),
+                price=musinsa["price"] if musinsa else m.get("price", 0),
                 category=m.get("category", "top"),
-                tags=profile.style_tags,
-                product_url=f"https://www.musinsa.com/search/goods?keyword={m['item_name'].replace(' ', '+')}",
+                tags=[profile.style_mood],
+                image_url=musinsa["image_url"] if musinsa else None,
+                product_url=(musinsa["product_url"] if musinsa else None) or fallback_url,
             )
             db.add(item)
             await db.flush()
