@@ -30,19 +30,30 @@ async def search_first_product(keyword: str) -> dict | None:
             res.raise_for_status()
             data = res.json()
 
+        logger.info("Musinsa raw response: %s", str(data)[:500])
+
         goods_list = (
             data.get("data", {}).get("goods", [])
             or data.get("data", {}).get("list", [])
+            or data.get("goods", [])
+            or data.get("list", [])
         )
         if not goods_list:
+            logger.warning("Musinsa: no goods in response. keys=%s", list(data.keys()))
             return None
 
         item = goods_list[0]
-        goods_no = item.get("goodsNo") or item.get("no")
-        thumbnail = item.get("thumbnail") or item.get("imageUrl") or item.get("img")
-        brand = (item.get("brand") or {}).get("name") or item.get("brandName", "")
+        goods_no = item.get("goodsNo") or item.get("no") or item.get("goodsCode")
+        thumbnail = (
+            item.get("thumbnail") or item.get("imageUrl")
+            or item.get("img") or item.get("goodsImage")
+        )
+        brand = (
+            (item.get("brand") or {}).get("name")
+            or item.get("brandName") or item.get("brand", "")
+        )
         name = item.get("goodsName") or item.get("name", keyword)
-        price = item.get("price", 0)
+        price = item.get("price") or item.get("goodsPrice", 0)
 
         return {
             "name": name,

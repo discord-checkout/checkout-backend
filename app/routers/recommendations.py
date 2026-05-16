@@ -67,15 +67,12 @@ async def get_first_item(
         price = musinsa["price"] or price
         brand = musinsa["brand"] or brand
 
-    if existing_entry:
-        wardrobe_entries_result = await db.execute(
-            select(WardrobeItem)
-            .where(WardrobeItem.user_id == current_user.id)
-            .options(selectinload(WardrobeItem.item))
-        )
-        all_items = [e.item for e in wardrobe_entries_result.scalars().all()]
-        after_combination_count = calculate_combinations(all_items)
-    else:
+    # after_combination_count: 현재 옷장 + 추천 아이템 추가 시 조합 수
+    wardrobe = dict(profile.current_wardrobe or {})
+    wardrobe["top"] = list(wardrobe.get("top", [])) + [item_name]
+    after_combination_count = calculate_wardrobe_combinations(wardrobe)
+
+    if not existing_entry:
         item = Item(
             id=uuid.uuid4(),
             name=item_name,
@@ -89,23 +86,14 @@ async def get_first_item(
         db.add(item)
         await db.flush()
 
-        wardrobe_entry = WardrobeItem(
+        db.add(WardrobeItem(
             user_id=current_user.id,
             item_id=item.id,
             month_added=1,
             is_first_item=True,
-            combination_count=0,
-        )
-        db.add(wardrobe_entry)
+            combination_count=after_combination_count - current_combination_count,
+        ))
         await db.commit()
-
-        wardrobe_entries_result = await db.execute(
-            select(WardrobeItem)
-            .where(WardrobeItem.user_id == current_user.id)
-            .options(selectinload(WardrobeItem.item))
-        )
-        all_items = [e.item for e in wardrobe_entries_result.scalars().all()]
-        after_combination_count = calculate_combinations(all_items)
 
     return FirstItemRecommendationOut(
         item_name=item_name,
