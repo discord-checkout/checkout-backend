@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -26,6 +26,6 @@ class StyleProfileOut(BaseModel):
     body_type: str
     budget_monthly: int
     lifestyle: str
-    profile_summary: str | None
+    profile_summary: Optional[str]
 
     model_config = {"from_attributes": True}

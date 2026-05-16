@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -10,7 +11,7 @@ from app.schemas.item import ItemOut
 class WardrobeItemOut(BaseModel):
     id: uuid.UUID
     item: ItemOut
-    month_added: int | None
+    month_added: Optional[int]
     is_first_item: bool
     combination_count: int
 
