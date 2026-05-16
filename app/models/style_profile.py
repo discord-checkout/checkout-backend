@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import JSONB
@@ -22,7 +22,7 @@ class StyleProfile(Base):
     body_type: Mapped[str] = mapped_column(String(50), nullable=False)
     budget_monthly: Mapped[int] = mapped_column(nullable=False)
     lifestyle: Mapped[str] = mapped_column(String(50), nullable=False)
-    profile_summary: Mapped[str | None] = mapped_column(String(500))
+    profile_summary: Mapped[Optional[str]] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

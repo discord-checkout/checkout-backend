@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from typing import Optional
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,7 +21,7 @@ class WardrobeItem(Base):
     item_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("items.id", ondelete="CASCADE"), nullable=False
     )
-    month_added: Mapped[int | None] = mapped_column(Integer)
+    month_added: Mapped[Optional[int]] = mapped_column(Integer)
     is_first_item: Mapped[bool] = mapped_column(Boolean, default=False)
     combination_count: Mapped[int] = mapped_column(Integer, default=0)
     added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
