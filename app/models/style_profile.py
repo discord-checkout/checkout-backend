@@ -18,10 +18,13 @@ class StyleProfile(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
     )
-    style_tags: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
-    body_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    budget_monthly: Mapped[int] = mapped_column(nullable=False)
+    style_mood: Mapped[str] = mapped_column(String(50), nullable=False)
+    fit_preference: Mapped[str] = mapped_column(String(50), nullable=False)
     lifestyle: Mapped[str] = mapped_column(String(50), nullable=False)
+    budget_range: Mapped[str] = mapped_column(String(20), nullable=False)
+    current_wardrobe: Mapped[Any] = mapped_column(
+        JSONB, nullable=False, default=lambda: {"top": [], "bottom": [], "outer": [], "shoes": []}
+    )
     profile_summary: Mapped[Optional[str]] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

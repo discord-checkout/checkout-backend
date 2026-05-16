@@ -37,11 +37,14 @@ async def _get_wardrobe_entries(user_id: uuid.UUID, db: AsyncSession) -> list[Wa
     return list(result.scalars().all())
 
 
-@router.get("", response_model=WardrobeOut)
+@router.get("", response_model=WardrobeOut, summary="내 옷장 조회")
 async def get_wardrobe(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> WardrobeOut:
+    """
+    내 옷장에 추가된 아이템 목록과 전체 코디 조합 수를 반환합니다.
+    """
     entries = await _get_wardrobe_entries(current_user.id, db)
 
     items_out = [
@@ -58,12 +61,19 @@ async def get_wardrobe(
     return WardrobeOut(items=items_out, total_combination_count=total)
 
 
-@router.post("/add", response_model=WardrobeAddOut, status_code=status.HTTP_201_CREATED)
+@router.post("/add", response_model=WardrobeAddOut, status_code=status.HTTP_201_CREATED,
+             summary="아이템 옷장에 추가")
 async def add_to_wardrobe(
     body: WardrobeAddIn,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> WardrobeAddOut:
+    """
+    추천받은 아이템을 내 옷장에 추가합니다.
+
+    - `item_id`: 추천 API 응답에서 받은 아이템 UUID
+    - `delta`: 이 아이템 추가로 새로 생긴 코디 조합 수
+    """
     item_result = await db.execute(select(Item).where(Item.id == body.item_id))
     item = item_result.scalar_one_or_none()
     if not item:
@@ -99,11 +109,17 @@ async def add_to_wardrobe(
     )
 
 
-@router.get("/roadmap", response_model=RoadmapOut)
+@router.get("/roadmap", response_model=RoadmapOut, summary="3개월 로드맵 조회")
 async def get_roadmap(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> RoadmapOut:
+    """
+    AI가 생성한 3개월 옷장 로드맵을 반환합니다.
+
+    - 각 달마다 추천 아이템과 추가 시 예상 코디 조합 수를 제공합니다.
+    - 추천 아이템의 `id`로 `/wardrobe/add`를 호출해 옷장에 추가할 수 있습니다.
+    """
     profile_result = await db.execute(
         select(StyleProfile).where(StyleProfile.user_id == current_user.id)
     )
