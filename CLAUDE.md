@@ -57,7 +57,8 @@ checkout-backend/
 ### User
 
 ```python
-# 필드: id, email, password_hash, nickname, created_at
+# 필드: id, nickname, created_at
+# 별도 회원가입 없음 — 클라이언트가 생성한 UUID로 자동 생성
 ```
 
 ### StyleProfile
@@ -79,14 +80,10 @@ checkout-backend/
 
 ### 인증
 
-```
-POST /auth/register
-  Body: { email, password, nickname }
-  Returns: { access_token, token_type }
+별도 로그인/회원가입 없음. 모든 요청에 `X-User-ID` 헤더(클라이언트 생성 UUID)를 포함하면 자동으로 유저가 생성됩니다.
 
-POST /auth/login
-  Body: { email, password }
-  Returns: { access_token, token_type }
+```
+X-User-ID: 550e8400-e29b-41d4-a716-446655440000
 ```
 
 ### 온보딩 (스타일 진단)
