@@ -2,23 +2,26 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.user import User
 
+api_key_header = APIKeyHeader(
+    name="X-User-ID",
+    description=(
+        "클라이언트가 생성한 고유 사용자 UUID. "
+        "앱 최초 실행 시 UUID를 생성해 로컬에 저장하고 모든 요청에 포함하세요. "
+        "예: 550e8400-e29b-41d4-a716-446655440000"
+    ),
+)
+
 
 async def get_current_user(
-    x_user_id: str = Header(
-        ...,
-        description=(
-            "클라이언트가 생성한 고유 사용자 UUID. "
-            "앱 최초 실행 시 UUID를 생성해 로컬에 저장하고 모든 요청에 포함하세요. "
-            "예: 550e8400-e29b-41d4-a716-446655440000"
-        ),
-    ),
+    x_user_id: str = Security(api_key_header),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     try:
