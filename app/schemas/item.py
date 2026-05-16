@@ -1,0 +1,26 @@
+import uuid
+
+from pydantic import BaseModel
+
+
+class ItemOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    brand: str | None
+    price: int
+    image_url: str | None
+    product_url: str | None
+    tags: list[str]
+
+    model_config = {"from_attributes": True}
+
+
+class CombinationOut(BaseModel):
+    description: str
+
+
+class FirstItemRecommendationOut(BaseModel):
+    item: ItemOut
+    reason: str
+    combinations: list[CombinationOut]
+    combination_count: int
