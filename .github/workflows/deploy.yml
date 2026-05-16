@@ -19,5 +19,4 @@ jobs:
           script: |
             cd ~/checkout-backend
             git pull origin main
-            pkill -f uvicorn || true
-            nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 & disown
+            sudo systemctl restart checkout
