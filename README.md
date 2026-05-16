@@ -34,7 +34,7 @@ headers: { 'X-User-ID': userId }
 | POST | `/wardrobe/add` | 옷장에 아이템 추가 |
 | GET | `/wardrobe/roadmap` | 3개월 로드맵 |
 
-API 문서 (Swagger): `http://서버주소:8000/docs`
+API 문서 (Swagger): `http://54.180.116.52:8000/docs`
 
 > Swagger에서 테스트할 때는 **Authorize** 버튼 클릭 → UUID 입력
 
