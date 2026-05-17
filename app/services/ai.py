@@ -63,7 +63,7 @@ async def generate_profile_summary(
 """
     try:
         model = _get_client()
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
         return response.text.strip()
     except Exception as e:
         logger.warning("Gemini generate_profile_summary failed: %s", e)
@@ -159,7 +159,7 @@ async def recommend_first_item(profile: StyleProfile, fixed_item_name: str | Non
 """
     try:
         model = _get_client()
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -246,7 +246,7 @@ search_keyword는 무신사 검색용 1~2단어 (예: "크루넥 맨투맨", "�
 """
     try:
         model = _get_client()
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]

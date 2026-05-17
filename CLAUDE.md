@@ -90,6 +90,7 @@ X-User-ID: 550e8400-e29b-41d4-a716-446655440000
 
 ```
 POST /onboarding/diagnose   # 재진단 가능 — 기존 프로필·옷장 전체 초기화 후 덮어씀
+
   Auth: Bearer token
   Body: {
     "style_mood": "minimal" | "casual" | "dandy" | "sports" | "vintage" | "street",
