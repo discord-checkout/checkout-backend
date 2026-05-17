@@ -5,72 +5,80 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+OuterItem = Literal[
+    "코트", "트렌치코트", "패딩", "자켓", "블레이저",
+    "가디건", "후드집업", "점퍼", "바람막이",
+]
+TopItem = Literal[
+    "베이직 셔츠", "니트", "티셔츠", "긴팔티", "맨투맨",
+    "후드티", "반팔셔츠", "린넨셔츠", "폴로셔츠",
+]
+BottomItem = Literal[
+    "슬랙스", "청바지", "조거팬츠", "반바지", "면바지",
+    "와이드팬츠", "카고팬츠",
+]
+
 
 class WardrobeIn(BaseModel):
-    top: list[str] = Field(
+    outer: list[OuterItem] = Field(
         default=[],
-        description="상의 목록. 현재 가지고 있는 상의 아이템명을 입력하세요. 없으면 빈 배열.",
-        examples=[["white_black_tee", "hoodie", "knit"]],
+        description="보유 중인 아우터 목록 (복수 선택 가능). 없으면 빈 배열.",
+        examples=[["자켓", "바람막이"]],
     )
-    bottom: list[str] = Field(
+    top: list[TopItem] = Field(
         default=[],
-        description="하의 목록. 현재 가지고 있는 하의 아이템명을 입력하세요. 없으면 빈 배열.",
-        examples=[["black_slacks", "wide_denim", "cargo_pants"]],
+        description="보유 중인 상의 목록 (복수 선택 가능). 없으면 빈 배열.",
+        examples=[["티셔츠", "맨투맨", "니트"]],
     )
-    outer: list[str] = Field(
+    bottom: list[BottomItem] = Field(
         default=[],
-        description="아우터 목록. 자켓, 코트 등. 없으면 빈 배열.",
-        examples=[["coach_jacket", "windbreaker"]],
-    )
-    shoes: list[str] = Field(
-        default=[],
-        description="신발 목록. 없으면 빈 배열.",
-        examples=[["white_sneakers", "new_balance"]],
+        description="보유 중인 하의 목록 (복수 선택 가능). 없으면 빈 배열.",
+        examples=[["청바지", "슬랙스"]],
     )
 
 
 class OnboardingIn(BaseModel):
-    style_mood: Literal["minimal", "casual", "cityboy", "amekaji", "sports", "vintage"] = Field(
+    style_mood: Literal["minimal", "casual", "dandy", "sports", "vintage", "street"] = Field(
         description=(
             "선호 스타일 무드.\n"
             "- `minimal`: 미니멀 (깔끔, 단색, 군더더기 없는 스타일)\n"
             "- `casual`: 캐주얼 (편안하고 일상적인 스타일)\n"
-            "- `cityboy`: 시티보이 (도시적, 스트릿 감성)\n"
-            "- `amekaji`: 아메카지 (아메리칸 캐주얼, 데님·워크웨어)\n"
+            "- `dandy`: 댄디 (클래식하고 세련된 신사 스타일)\n"
             "- `sports`: 스포츠 (스포티, 애슬레저)\n"
-            "- `vintage`: 빈티지 (레트로, 구제 감성)"
+            "- `vintage`: 빈티지 (레트로, 구제 감성)\n"
+            "- `street`: 스트릿 (힙한 스트리트·그래픽 감성)"
         ),
         examples=["minimal"],
     )
-    fit_preference: Literal["slim", "regular", "overfit", "unknown"] = Field(
+    fit_preference: Literal["slim", "regular", "overfit"] = Field(
         description=(
             "선호하는 핏.\n"
             "- `slim`: 슬림핏 (몸에 딱 맞는)\n"
             "- `regular`: 레귤러핏 (표준 사이즈)\n"
-            "- `overfit`: 오버핏 (크고 여유 있는)\n"
-            "- `unknown`: 잘 모르겠음"
+            "- `overfit`: 오버핏 (크고 여유 있는)"
         ),
         examples=["regular"],
     )
     lifestyle: Literal["campus", "office", "daily", "freelance"] = Field(
         description=(
             "주요 생활 패턴.\n"
-            "- `campus`: 캠퍼스 (학교생활 중심)\n"
-            "- `office`: 오피스 (직장생활 중심)\n"
-            "- `daily`: 데일리 (일상·약속 중심)\n"
-            "- `freelance`: 프리랜서 (재택·카페 중심)"
+            "- `campus`: 캠퍼스/학교 생활 중심\n"
+            "- `office`: 직장/오피스 생활 중심\n"
+            "- `daily`: 전역 후/일상 생활 중심\n"
+            "- `freelance`: 자유직/재택 근무 중심"
         ),
         examples=["campus"],
     )
     current_wardrobe: WardrobeIn = Field(
-        description="현재 보유 중인 옷장. 카테고리별로 아이템명을 입력하세요. 아이템이 없는 카테고리는 빈 배열로 보내세요."
+        description="현재 보유 중인 옷장. 카테고리별로 아이템을 복수 선택하세요. 없는 카테고리는 빈 배열로 보내세요."
     )
-    budget_range: Literal["under_5", "5_to_10", "10_to_20", "over_20"] = Field(
+    budget_range: Literal["under_5", "5_to_10", "10_to_15", "15_to_20", "over_20"] = Field(
         description=(
             "월 의류 예산 (만원 단위).\n"
-            "- `under_5`: 5만원 미만\n"
+            "- `under_5`: 5만원 이하\n"
             "- `5_to_10`: 5~10만원\n"
-            "- `10_to_20`: 10~20만원\n"
+            "- `10_to_15`: 10~15만원\n"
+            "- `15_to_20`: 15~20만원\n"
             "- `over_20`: 20만원 이상"
         ),
         examples=["5_to_10"],

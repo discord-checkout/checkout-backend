@@ -65,11 +65,11 @@ checkout-backend/
 
 ```python
 # 필드: id, user_id(FK),
-#        style_mood        # "minimal" | "casual" | "cityboy" | "amekaji" | "sports" | "vintage"
-#        fit_preference    # "slim" | "regular" | "overfit" | "unknown"
+#        style_mood        # "minimal" | "casual" | "dandy" | "sports" | "vintage" | "street"
+#        fit_preference    # "slim" | "regular" | "overfit"
 #        lifestyle         # "campus" | "office" | "daily" | "freelance"
-#        budget_range      # "under_5" | "5_to_10" | "10_to_20" | "over_20"  (만원 단위)
-#        current_wardrobe  # JSONB: { "top": [...], "bottom": [...], "outer": [...], "shoes": [...] }
+#        budget_range      # "under_5" | "5_to_10" | "10_to_15" | "15_to_20" | "over_20"  (만원 단위)
+#        current_wardrobe  # JSONB: { "top": [...], "bottom": [...], "outer": [...] }
 #        profile_summary   # Gemini가 생성한 한 줄 요약
 #        created_at, updated_at
 ```
@@ -92,16 +92,15 @@ X-User-ID: 550e8400-e29b-41d4-a716-446655440000
 POST /onboarding/diagnose
   Auth: Bearer token
   Body: {
-    "style_mood": "minimal" | "casual" | "cityboy" | "amekaji" | "sports" | "vintage",
-    "fit_preference": "slim" | "regular" | "overfit" | "unknown",
+    "style_mood": "minimal" | "casual" | "dandy" | "sports" | "vintage" | "street",
+    "fit_preference": "slim" | "regular" | "overfit",
     "lifestyle": "campus" | "office" | "daily" | "freelance",
     "current_wardrobe": {
-      "top": ["white_black_tee", "hoodie", "knit", ...],   # 없으면 빈 배열
-      "bottom": ["black_slacks", "wide_denim", ...],
-      "outer": ["coach_jacket", "windbreaker", ...],
-      "shoes": ["white_sneakers", "new_balance", ...]
+      "outer": ["코트", "자켓", ...],   # 없으면 빈 배열
+      "top": ["티셔츠", "맨투맨", ...],
+      "bottom": ["청바지", "슬랙스", ...]
     },
-    "budget_range": "under_5" | "5_to_10" | "10_to_20" | "over_20"
+    "budget_range": "under_5" | "5_to_10" | "10_to_15" | "15_to_20" | "over_20"
   }
   Returns: {
     "profile_id": "uuid",

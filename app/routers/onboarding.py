@@ -25,10 +25,10 @@ async def diagnose(
     """
     스타일 진단을 진행하고 프로필을 생성합니다. **최초 1회만 호출 가능합니다.**
 
-    - `style_mood`: 선호 스타일 무드 (minimal / casual / cityboy / amekaji / sports / vintage)
-    - `fit_preference`: 선호 핏 (slim / regular / overfit / unknown)
+    - `style_mood`: 선호 스타일 무드 (minimal / casual / dandy / sports / vintage / street)
+    - `fit_preference`: 선호 핏 (slim / regular / overfit)
     - `lifestyle`: 생활 패턴 (campus / office / daily / freelance)
-    - `budget_range`: 월 예산 (under_5 / 5_to_10 / 10_to_20 / over_20)
+    - `budget_range`: 월 예산 (under_5 / 5_to_10 / 10_to_15 / 15_to_20 / over_20)
     - `current_wardrobe`: 현재 보유 옷장. 없는 카테고리는 빈 배열 `[]`로 전송
 
     응답의 `current_combination_count`는 현재 옷장으로 만들 수 있는 코디 수입니다.
