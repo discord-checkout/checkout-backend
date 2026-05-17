@@ -134,9 +134,27 @@ async def get_roadmap(
     existing_entries = await _get_wardrobe_entries(current_user.id, db)
     current_items = [{"name": e.item.name, "category": e.item.category} for e in existing_entries]
 
-    months_data = await ai.generate_roadmap(profile, current_items)
+    first_entry = next((e for e in existing_entries if e.is_first_item), None)
+    first_item_dict = (
+        {"name": first_entry.item.name, "category": first_entry.item.category}
+        if first_entry else None
+    )
+
+    months_data = await ai.generate_roadmap(profile, current_items, first_item=first_item_dict)
 
     months_out: list[RoadmapMonthOut] = []
+
+    if first_entry:
+        current_combination_count = calculate_combinations([e.item for e in existing_entries])
+        months_out.append(
+            RoadmapMonthOut(
+                month=1,
+                recommended_item=ItemOut.model_validate(first_entry.item),
+                reason="첫 번째 핵심 아이템입니다.",
+                projected_combination_count=current_combination_count,
+            )
+        )
+
     for m in months_data:
         item_result = await db.execute(
             select(Item).where(Item.name == m["item_name"], Item.brand == m.get("brand"))

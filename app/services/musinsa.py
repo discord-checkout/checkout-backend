@@ -34,7 +34,7 @@ def _keyword_candidates(keyword: str) -> list[str]:
 
 
 async def _do_search(client: httpx.AsyncClient, keyword: str) -> dict | None:
-    params = {"keyword": keyword, "caller": "SEARCH", "page": 1, "size": 1}
+    params = {"keyword": keyword, "caller": "SEARCH", "page": 1, "size": 1, "gf": "M"}
     res = await client.get(_URL, params=params, headers=_HEADERS)
     if res.status_code != 200:
         logger.warning("Musinsa: status=%s body=%s", res.status_code, res.text[:200])
