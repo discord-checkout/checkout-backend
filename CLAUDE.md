@@ -89,7 +89,7 @@ X-User-ID: 550e8400-e29b-41d4-a716-446655440000
 ### 온보딩 (스타일 진단)
 
 ```
-POST /onboarding/diagnose
+POST /onboarding/diagnose   # 재진단 가능 — 기존 프로필·옷장 전체 초기화 후 덮어씀
   Auth: Bearer token
   Body: {
     "style_mood": "minimal" | "casual" | "dandy" | "sports" | "vintage" | "street",
@@ -110,8 +110,8 @@ POST /onboarding/diagnose
   }
 
   # 내부 동작:
-  # 1. StyleProfile DB 저장
-  # 2. ai.analyze_wardrobe(current_wardrobe) → 현재 조합 수 계산
+  # 1. 기존 StyleProfile 있으면 WardrobeItem 전체 삭제 후 프로필 덮어쓰기, 없으면 신규 생성
+  # 2. calculate_wardrobe_combinations(current_wardrobe) → 현재 조합 수 계산
   # 3. profile_summary 생성 후 응답
 ```
 
