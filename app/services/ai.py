@@ -109,6 +109,15 @@ async def recommend_first_item(profile: StyleProfile, fixed_item_name: str | Non
 - combinations description: "아이템A + 아이템B + 아이템C" 형식만 사용. 괄호, 부연 설명, 주석 절대 금지.
 """
     else:
+        style_guide = {
+            "minimal": "무지 단색 아이템만 추천. 체크·줄무늬·그래픽·로고 등 패턴 절대 금지. 예: 화이트 오버핏 셔츠, 블랙 슬랙스, 베이지 니트, 그레이 맨투맨",
+            "casual": "편안하고 일상적인 아이템. 예: 스트라이프 티셔츠, 와이드 청바지, 후드티, 면바지",
+            "dandy": "클래식하고 세련된 아이템. 예: 블레이저, 슬랙스, 폴로셔츠, 트렌치코트",
+            "sports": "기능성 스포티 아이템. 예: 트랙 팬츠, 나일론 자켓, 조거팬츠, 집업",
+            "vintage": "레트로 감성 아이템. 예: 워싱 데님, 플란넬 셔츠, 빈티지 후드, 코듀로이 팬츠",
+            "street": "힙한 스트릿 아이템. 예: 그래픽 티셔츠, 카고팬츠, 오버핏 후드, 워크 자켓",
+        }.get(profile.style_mood, "")
+
         prompt = f"""
 당신은 패션 큐레이터입니다. 아래 프로필의 대학생에게 옷장의 핵심 첫 번째 아이템을 추천해주세요.
 
@@ -118,9 +127,12 @@ async def recommend_first_item(profile: StyleProfile, fixed_item_name: str | Non
 월 예산: {budget_label}
 현재 보유 옷장: {wardrobe_summary}
 
+[스타일 가이드 - 반드시 준수]
+{mood_label} 스타일: {style_guide}
+
 [중요 지침]
 - 추천 아이템의 price 값은 반드시 {max_price_str} 이하인 실제 판매 가격이어야 합니다. 이 조건을 어기면 안 됩니다.
-- 스타일({mood_label})에 맞는 아이템을 추천하세요.
+- 위 스타일 가이드에서 벗어난 아이템은 절대 추천하지 마세요.
 - 조합(combinations)은 반드시 현재 보유 옷장의 아이템들과 추천 아이템을 엮은 실제 코디여야 합니다.
 - 보유 옷장이 비어있으면 앞으로 갖춰나갈 기본 아이템들과의 조합을 제시하세요.
 - 모든 텍스트는 반드시 한국어로만 작성하세요.
@@ -187,6 +199,15 @@ async def generate_roadmap(
     else:
         month_instruction = "1달차부터 3달차까지 아이템을 추천해주세요."
 
+    style_guide = {
+        "minimal": "무지 단색 아이템만 추천. 체크·줄무늬·그래픽·로고 등 패턴 절대 금지. 예: 화이트 오버핏 셔츠, 블랙 슬랙스, 베이지 니트, 그레이 맨투맨",
+        "casual": "편안하고 일상적인 아이템. 예: 스트라이프 티셔츠, 와이드 청바지, 후드티, 면바지",
+        "dandy": "클래식하고 세련된 아이템. 예: 블레이저, 슬랙스, 폴로셔츠, 트렌치코트",
+        "sports": "기능성 스포티 아이템. 예: 트랙 팬츠, 나일론 자켓, 조거팬츠, 집업",
+        "vintage": "레트로 감성 아이템. 예: 워싱 데님, 플란넬 셔츠, 빈티지 후드, 코듀로이 팬츠",
+        "street": "힙한 스트릿 아이템. 예: 그래픽 티셔츠, 카고팬츠, 오버핏 후드, 워크 자켓",
+    }.get(profile.style_mood, "")
+
     prompt = f"""
 당신은 패션 스타일리스트입니다. 아래 프로필을 가진 대학생의 옷장 로드맵을 만들어주세요.
 
@@ -196,9 +217,12 @@ async def generate_roadmap(
 
 {month_instruction}
 
+[스타일 가이드 - 반드시 준수]
+{mood_label} 스타일: {style_guide}
+
 [중요 지침]
 - 각 달 추천 아이템의 가격은 반드시 월 예산({budget_label}) 이내여야 합니다.
-- {mood_label} 스타일에 맞는 아이템만 추천하세요.
+- 위 스타일 가이드에서 벗어난 아이템은 절대 추천하지 마세요.
 - 앞 달 아이템과 조합이 잘 되는 아이템 위주로 구성하세요.
 
 다음 JSON 형식으로만 응답하세요 (month 값은 {start_month}부터 시작):
