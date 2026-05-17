@@ -54,6 +54,25 @@ async def get_first_item(
     )
     existing_entry = existing_result.scalar_one_or_none()
 
+    if existing_entry:
+        # 이미 추천된 아이템이 있으면 DB 아이템을 그대로 사용
+        stored = existing_entry.item
+        after_combination_count = current_combination_count + existing_entry.combination_count
+        recommendation = await ai.recommend_first_item(profile, fixed_item_name=stored.name)
+        combinations = [CombinationOut(**c) for c in recommendation.get("combinations", [])]
+        return FirstItemRecommendationOut(
+            item_name=stored.name,
+            price=stored.price,
+            brand=stored.brand,
+            reason=recommendation["reason"],
+            image_url=stored.image_url,
+            product_url=stored.product_url,
+            combinations=combinations,
+            current_combination_count=current_combination_count,
+            after_combination_count=after_combination_count,
+        )
+
+    # 최초 추천
     recommendation = await ai.recommend_first_item(profile)
     item_name = recommendation["item_name"]
     search_keyword = recommendation.get("search_keyword") or item_name
@@ -72,33 +91,31 @@ async def get_first_item(
         if budget_max is None or musinsa_price <= budget_max:
             price = musinsa_price or price
 
-    # after_combination_count: 현재 옷장 + 추천 아이템 추가 시 조합 수
     wardrobe = dict(profile.current_wardrobe or {})
     wardrobe["top"] = list(wardrobe.get("top", [])) + [item_name]
     after_combination_count = calculate_wardrobe_combinations(wardrobe)
 
-    if not existing_entry:
-        item = Item(
-            id=uuid.uuid4(),
-            name=item_name,
-            brand=brand,
-            price=price,
-            category="top",
-            tags=[profile.style_mood],
-            image_url=image_url,
-            product_url=product_url,
-        )
-        db.add(item)
-        await db.flush()
+    item = Item(
+        id=uuid.uuid4(),
+        name=item_name,
+        brand=brand,
+        price=price,
+        category="top",
+        tags=[profile.style_mood],
+        image_url=image_url,
+        product_url=product_url,
+    )
+    db.add(item)
+    await db.flush()
 
-        db.add(WardrobeItem(
-            user_id=current_user.id,
-            item_id=item.id,
-            month_added=1,
-            is_first_item=True,
-            combination_count=after_combination_count - current_combination_count,
-        ))
-        await db.commit()
+    db.add(WardrobeItem(
+        user_id=current_user.id,
+        item_id=item.id,
+        month_added=1,
+        is_first_item=True,
+        combination_count=after_combination_count - current_combination_count,
+    ))
+    await db.commit()
 
     return FirstItemRecommendationOut(
         item_name=item_name,

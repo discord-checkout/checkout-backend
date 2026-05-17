@@ -11,7 +11,7 @@ import pytest
 import pytest_asyncio
 from unittest.mock import MagicMock, patch
 
-from app.services.ai import generate_roadmap
+from app.services.ai import generate_roadmap, recommend_first_item
 
 
 # conftest.py의 setup_db(autouse=True)가 PostgreSQL에 연결하려 하므로 no-op으로 override
@@ -135,3 +135,26 @@ async def test_roadmap_fallback_without_first_item():
 
     assert result[0]["month"] == 1
     assert len(result) == 3
+
+
+@pytest.mark.asyncio
+async def test_fixed_item_prompt_does_not_include_item_selection():
+    """fixed_item_name 있으면 아이템 선택 없이 reason/combinations만 요청"""
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = _make_gemini_response([])
+    mock_model.generate_content.return_value.text = json.dumps({
+        "reason": "이 셔츠는 어디서나 활용 가능합니다.",
+        "combinations": [
+            {"label": "조합 1", "description": "화이트 셔츠 + 청바지 + 스니커즈"},
+        ],
+    })
+
+    with patch("app.services.ai._get_client", return_value=mock_model):
+        result = await recommend_first_item(_make_profile(), fixed_item_name="화이트 셔츠")
+
+    prompt = mock_model.generate_content.call_args[0][0]
+    assert "화이트 셔츠" in prompt
+    assert "item_name" not in prompt        # 아이템 선택 필드 없음
+    assert "search_keyword" not in prompt   # 검색 키워드 없음
+    assert result["reason"] != ""
+    assert len(result["combinations"]) == 1

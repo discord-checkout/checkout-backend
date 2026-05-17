@@ -70,7 +70,7 @@ async def generate_profile_summary(
         return f"{_LIFESTYLE_LABEL.get(lifestyle, lifestyle)} · {budget_label} · {_MOOD_LABEL.get(style_mood, style_mood)}"
 
 
-async def recommend_first_item(profile: StyleProfile) -> dict:
+async def recommend_first_item(profile: StyleProfile, fixed_item_name: str | None = None) -> dict:
     budget_label = _BUDGET_LABEL.get(profile.budget_range, profile.budget_range).replace("월 ", "")
     budget_max = BUDGET_MAX.get(profile.budget_range)
     max_price_str = f"{budget_max:,}원" if budget_max else "제한 없음"
@@ -84,7 +84,32 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
         "아우터": current_wardrobe.get("outer", []),
     }
 
-    prompt = f"""
+    if fixed_item_name:
+        prompt = f"""
+당신은 패션 큐레이터입니다. 아래 프로필의 대학생이 이미 "{fixed_item_name}"을 첫 번째 아이템으로 선택했습니다.
+이 아이템을 추천한 이유와 현재 보유 옷장과의 코디 조합을 설명해주세요.
+
+스타일: {mood_label}
+핏 선호: {profile.fit_preference}
+라이프스타일: {lifestyle_label}
+현재 보유 옷장: {wardrobe_summary}
+
+다음 JSON 형식으로만 응답하세요:
+{{
+  "reason": "이 옷을 첫 번째로 추천하는 이유 (2-3문장)",
+  "combinations": [
+    {{"label": "조합 1", "description": "{fixed_item_name} + 아이템B + 아이템C"}},
+    {{"label": "조합 2", "description": "{fixed_item_name} + 아이템B + 아이템C"}},
+    {{"label": "조합 3", "description": "{fixed_item_name} + 아이템B + 아이템C"}}
+  ]
+}}
+
+[형식 규칙]
+- combinations label: "조합 1", "조합 2", "조합 3" 형식만 사용.
+- combinations description: "아이템A + 아이템B + 아이템C" 형식만 사용. 괄호, 부연 설명, 주석 절대 금지.
+"""
+    else:
+        prompt = f"""
 당신은 패션 큐레이터입니다. 아래 프로필의 대학생에게 옷장의 핵심 첫 번째 아이템을 추천해주세요.
 
 스타일: {mood_label}
