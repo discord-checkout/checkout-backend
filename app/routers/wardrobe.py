@@ -23,6 +23,7 @@ from app.schemas.wardrobe import (
     WardrobeOut,
 )
 from app.services import ai
+from app.services.ai import BUDGET_MAX
 from app.services.combination import calculate_combinations
 from app.services.musinsa import search_first_product
 
@@ -143,17 +144,20 @@ async def get_roadmap(
         item = item_result.scalar_one_or_none()
 
         if not item:
-            musinsa = await search_first_product(m["item_name"])
-            fallback_url = f"https://www.musinsa.com/search/goods?keyword={m['item_name'].replace(' ', '+')}"
+            search_keyword = m.get("search_keyword") or m["item_name"]
+            musinsa = await search_first_product(search_keyword)
+            budget_max = BUDGET_MAX.get(profile.budget_range)
+            musinsa_price = musinsa["price"] or 0 if musinsa else 0
+            use_musinsa_price = musinsa and (budget_max is None or musinsa_price <= budget_max)
             item = Item(
                 id=uuid.uuid4(),
-                name=m["item_name"],
+                name=musinsa["name"] if musinsa else m["item_name"],
                 brand=musinsa["brand"] if musinsa else m.get("brand"),
-                price=musinsa["price"] if musinsa else m.get("price", 0),
+                price=musinsa_price if use_musinsa_price else m.get("price", 0),
                 category=m.get("category", "top"),
                 tags=[profile.style_mood],
                 image_url=musinsa["image_url"] if musinsa else None,
-                product_url=(musinsa["product_url"] if musinsa else None) or fallback_url,
+                product_url=musinsa["product_url"] if musinsa else None,
             )
             db.add(item)
             await db.flush()

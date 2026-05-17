@@ -21,13 +21,15 @@ _HEADERS = {
 
 def _keyword_candidates(keyword: str) -> list[str]:
     import re
-    clean = re.sub(r"\([^)]*\)", "", keyword)   # 괄호 제거
-    clean = re.sub(r"\s*[-–]\s*\S+.*$", "", clean)  # 대시 이후 제거
+    clean = re.sub(r"\([^)]*\)", "", keyword)
+    clean = re.sub(r"\s*[-–]\s*\S+.*$", "", clean)
     clean = clean.strip()
     words = clean.split()
     candidates = [clean]
     if len(words) > 2:
-        candidates.append(" ".join(words[-2:]))  # 마지막 2단어로 재시도
+        candidates.append(" ".join(words[-2:]))  # 마지막 2단어
+    if len(words) > 1:
+        candidates.append(words[-1])             # 마지막 1단어 (최후 수단)
     return candidates
 
 

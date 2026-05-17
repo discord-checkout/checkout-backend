@@ -102,7 +102,8 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
 
 다음 JSON 형식으로만 응답하세요:
 {{
-  "item_name": "화이트 오버핏 셔츠",
+  "item_name": "오버핏 화이트 셔츠",
+  "search_keyword": "화이트 셔츠",
   "brand": "브랜드명",
   "price": 29000,
   "reason": "이 옷을 첫 번째로 추천하는 이유 (2-3문장)",
@@ -114,7 +115,8 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
 }}
 
 [형식 규칙]
-- item_name: 무신사 검색어로 쓸 수 있는 2~4단어의 간결한 이름. 괄호·색상 부연 설명 없이.
+- item_name: 사용자에게 보여줄 아이템명 (2~5단어).
+- search_keyword: 무신사에서 검색할 키워드. 반드시 1~2단어, "색상+품목" 형태. 예: "화이트 셔츠", "와이드 청바지", "크루넥 맨투맨", "오버핏 후드티". 괄호·브랜드명·수식어 절대 금지.
 - combinations label: "조합 1", "조합 2", "조합 3" 형식만 사용.
 - combinations description: "아이템A + 아이템B + 아이템C" 형식만 사용. 괄호, 부연 설명, 주석 절대 금지.
 """
@@ -164,6 +166,7 @@ async def generate_roadmap(profile: StyleProfile, current_items: list[dict]) -> 
     {{
       "month": 1,
       "item_name": "아이템명",
+      "search_keyword": "검색키워드",
       "brand": "브랜드",
       "price": 29000,
       "category": "top",
@@ -174,6 +177,7 @@ async def generate_roadmap(profile: StyleProfile, current_items: list[dict]) -> 
 }}
 
 category는 top/bottom/outer/shoes 중 하나.
+search_keyword는 무신사 검색용 1~2단어 (예: "크루넥 맨투맨", "와이드 청바지"). 괄호·브랜드명 금지.
 """
     try:
         model = _get_client()

@@ -56,20 +56,21 @@ async def get_first_item(
 
     recommendation = await ai.recommend_first_item(profile)
     item_name = recommendation["item_name"]
+    search_keyword = recommendation.get("search_keyword") or item_name
     brand = recommendation.get("brand", "")
     price = recommendation["price"]
     combinations = [CombinationOut(**c) for c in recommendation.get("combinations", [])]
 
-    musinsa = await search_first_product(item_name)
+    musinsa = await search_first_product(search_keyword)
     image_url = musinsa["image_url"] if musinsa else None
-    fallback_url = f"https://www.musinsa.com/search/goods?keyword={item_name.replace(' ', '+')}"
-    product_url = (musinsa["product_url"] if musinsa else None) or fallback_url
+    product_url = musinsa["product_url"] if musinsa else None
     if musinsa:
+        item_name = musinsa["name"] or item_name
+        brand = musinsa["brand"] or brand
         budget_max = BUDGET_MAX.get(profile.budget_range)
         musinsa_price = musinsa["price"] or 0
         if budget_max is None or musinsa_price <= budget_max:
             price = musinsa_price or price
-        brand = musinsa["brand"] or brand
 
     # after_combination_count: 현재 옷장 + 추천 아이템 추가 시 조합 수
     wardrobe = dict(profile.current_wardrobe or {})
