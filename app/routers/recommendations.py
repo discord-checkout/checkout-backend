@@ -15,6 +15,7 @@ from app.models.user import User
 from app.models.wardrobe import WardrobeItem
 from app.schemas.item import CombinationOut, FirstItemRecommendationOut
 from app.services import ai
+from app.services.ai import BUDGET_MAX
 from app.services.combination import calculate_combinations, calculate_wardrobe_combinations
 from app.services.musinsa import search_first_product
 
@@ -64,7 +65,10 @@ async def get_first_item(
     fallback_url = f"https://www.musinsa.com/search/goods?keyword={item_name.replace(' ', '+')}"
     product_url = (musinsa["product_url"] if musinsa else None) or fallback_url
     if musinsa:
-        price = musinsa["price"] or price
+        budget_max = BUDGET_MAX.get(profile.budget_range)
+        musinsa_price = musinsa["price"] or 0
+        if budget_max is None or musinsa_price <= budget_max:
+            price = musinsa_price or price
         brand = musinsa["brand"] or brand
 
     # after_combination_count: 현재 옷장 + 추천 아이템 추가 시 조합 수

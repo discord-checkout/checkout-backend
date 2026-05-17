@@ -23,6 +23,13 @@ _BUDGET_LABEL: dict[str, str] = {
     "15_to_20": "월 15~20만원",
     "over_20": "월 20만원 이상",
 }
+BUDGET_MAX: dict[str, int | None] = {
+    "under_5": 50000,
+    "5_to_10": 100000,
+    "10_to_15": 150000,
+    "15_to_20": 200000,
+    "over_20": None,
+}
 _LIFESTYLE_LABEL: dict[str, str] = {
     "campus": "캠퍼스",
     "office": "오피스",
@@ -65,6 +72,8 @@ async def generate_profile_summary(
 
 async def recommend_first_item(profile: StyleProfile) -> dict:
     budget_label = _BUDGET_LABEL.get(profile.budget_range, profile.budget_range).replace("월 ", "")
+    budget_max = BUDGET_MAX.get(profile.budget_range)
+    max_price_str = f"{budget_max:,}원" if budget_max else "제한 없음"
     mood_label = _MOOD_LABEL.get(profile.style_mood, profile.style_mood)
     lifestyle_label = _LIFESTYLE_LABEL.get(profile.lifestyle, profile.lifestyle)
 
@@ -85,7 +94,7 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
 현재 보유 옷장: {wardrobe_summary}
 
 [중요 지침]
-- 추천 아이템의 가격은 반드시 월 예산({budget_label}) 이내여야 합니다.
+- 추천 아이템의 price 값은 반드시 {max_price_str} 이하인 실제 판매 가격이어야 합니다. 이 조건을 어기면 안 됩니다.
 - 스타일({mood_label})에 맞는 아이템을 추천하세요.
 - 조합(combinations)은 반드시 현재 보유 옷장의 아이템들과 추천 아이템을 엮은 실제 코디여야 합니다.
 - 보유 옷장이 비어있으면 앞으로 갖춰나갈 기본 아이템들과의 조합을 제시하세요.
