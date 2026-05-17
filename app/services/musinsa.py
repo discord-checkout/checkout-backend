@@ -19,38 +19,47 @@ _HEADERS = {
 }
 
 
-def _simplify_keyword(keyword: str) -> str:
+def _keyword_candidates(keyword: str) -> list[str]:
     import re
-    keyword = re.sub(r"\([^)]*\)", "", keyword)  # 괄호 제거
-    keyword = re.sub(r"\s*[-–]\s*\S+.*$", "", keyword)  # 대시 이후 제거
-    return keyword.strip()
+    clean = re.sub(r"\([^)]*\)", "", keyword)   # 괄호 제거
+    clean = re.sub(r"\s*[-–]\s*\S+.*$", "", clean)  # 대시 이후 제거
+    clean = clean.strip()
+    words = clean.split()
+    candidates = [clean]
+    if len(words) > 2:
+        candidates.append(" ".join(words[-2:]))  # 마지막 2단어로 재시도
+    return candidates
+
+
+async def _do_search(client: httpx.AsyncClient, keyword: str) -> dict | None:
+    params = {"keyword": keyword, "caller": "SEARCH", "page": 1, "size": 1}
+    res = await client.get(_URL, params=params, headers=_HEADERS)
+    if res.status_code != 200:
+        logger.warning("Musinsa: status=%s body=%s", res.status_code, res.text[:200])
+        return None
+    items = res.json().get("data", {}).get("list", [])
+    if not items:
+        return None
+    item = items[0]
+    thumbnail = item.get("thumbnail", "")
+    return {
+        "name": item.get("goodsName", keyword),
+        "brand": item.get("brandName", ""),
+        "price": item.get("price") or item.get("normalPrice", 0),
+        "image_url": f"https:{thumbnail}" if thumbnail.startswith("//") else thumbnail or None,
+        "product_url": item.get("goodsLinkUrl"),
+    }
 
 
 async def search_first_product(keyword: str) -> dict | None:
-    clean = _simplify_keyword(keyword)
-    params = {"keyword": clean, "caller": "SEARCH", "page": 1, "size": 1}
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            res = await client.get(_URL, params=params, headers=_HEADERS)
-            if res.status_code != 200:
-                logger.warning("Musinsa: status=%s body=%s", res.status_code, res.text[:200])
-                return None
-
-            data = res.json()
-            items = data.get("data", {}).get("list", [])
-            if not items:
-                logger.warning("Musinsa: empty list for keyword=%s", keyword)
-                return None
-
-            item = items[0]
-            thumbnail = item.get("thumbnail", "")
-            return {
-                "name": item.get("goodsName", keyword),
-                "brand": item.get("brandName", ""),
-                "price": item.get("price") or item.get("normalPrice", 0),
-                "image_url": f"https:{thumbnail}" if thumbnail.startswith("//") else thumbnail,
-                "product_url": item.get("goodsLinkUrl"),
-            }
+            for query in _keyword_candidates(keyword):
+                result = await _do_search(client, query)
+                if result:
+                    return result
+        logger.warning("Musinsa: no results for keyword=%s", keyword)
+        return None
     except Exception as e:
         logger.warning("Musinsa search failed: %s", e)
         return None

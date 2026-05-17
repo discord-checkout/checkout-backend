@@ -102,7 +102,7 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
 
 다음 JSON 형식으로만 응답하세요:
 {{
-  "item_name": "아이템 이름",
+  "item_name": "화이트 오버핏 셔츠",
   "brand": "브랜드명",
   "price": 29000,
   "reason": "이 옷을 첫 번째로 추천하는 이유 (2-3문장)",
@@ -112,6 +112,11 @@ async def recommend_first_item(profile: StyleProfile) -> dict:
     {{"label": "조합 3", "description": "화이트 셔츠 + 슬랙스 + 로퍼"}}
   ]
 }}
+
+[형식 규칙]
+- item_name: 무신사 검색어로 쓸 수 있는 2~4단어의 간결한 이름. 괄호·색상 부연 설명 없이.
+- combinations label: "조합 1", "조합 2", "조합 3" 형식만 사용.
+- combinations description: "아이템A + 아이템B + 아이템C" 형식만 사용. 괄호, 부연 설명, 주석 절대 금지.
 """
     try:
         model = _get_client()
